@@ -1,0 +1,70 @@
+data analysis is done on 911 calls using python library 
+# WE ARE USING JUPTERNOTEBOOK FOR ANALYSIS
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.set_style('whitegrid')
+%matplotlib inline
+
+DATA COLLECTION 
+
+df = pd.read_csv('911.csv') #upload csv files
+
+DATA PROCESSING
+
+df.info()                   #info about the dataframe
+df.head(3)                  #first 3 datas are printed
+df['zip'].value_counts().head(5)    #to see top 5 zipcodes
+df['twp'].value_counts().head(5)    #to see top township in that data 
+df['Reason'] = df['title'].apply(lambda title: title.split(':')[0])
+
+DATA CLEANING
+
+df['column_name'].fillna(value=df['column_name'].mean()) #if there any missing datas in the dataset
+
+DATA Visualization is done by using countplot
+sns.countplot(x='Reason',data=df,palette='viridis')
+
+the timestamp has string datatype inorder to visualize at specific date we cant do that so we are changing the str to datatime object
+
+df['timeStamp'] = pd.to_datetime(df['timeStamp'])
+df['Hour'] = df['timeStamp'].apply(lambda time: time.hour)
+df['Month'] = df['timeStamp'].apply(lambda time: time.month)
+df['Day of Week'] = df['timeStamp'].apply(lambda time: time.dayofweek)
+
+Separate plots for better understanding
+df[df['Reason']=='Traffic'].groupby('Date').count()['twp'].plot() #traffic
+plt.title('Traffic')
+plt.tight_layout()
+
+df[df['Reason']=='Fire'].groupby('Date').count()['twp'].plot() #fire
+plt.title('Traffic')
+plt.tight_layout()
+
+df[df['Reason']=='EMS'].groupby('Date').count()['twp'].plot() #EMS
+plt.title('Traffic')
+plt.tight_layout()
+
+We'll first need to restructure the dataframe so that the columns become the Hours and the Index becomes the Day of the Week.
+dayHour = df.groupby(by=['Day of Week','Hour']).count()['Reason'].unstack()
+dayHour.head()
+
+Interpret the results using heatmap 
+plt.figure(figsize=(12,6))
+sns.heatmap(dayHour,cmap='viridis')
+dpmap = {0:'Mon',1:'Tue',2:'Wed',3:'Thu',4:'Fri',5:'Sat',6:'Sun'}
+df['Day of Week'] = df['Day of Week'].map(dpmap)
+
+
+VISUALIZATION OF THAT DAY OF WEEK COLUMN BASED ON REASON USING COUNTPLOT
+
+sns.countplot(x='Day of Week',data=df,hue='Reason',palette='viridis')
+# To relocate the legend
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+
+similarily we can see for month also
+sns.countplot(x='Month',data=df,hue='Reason',palette='viridis')
+# To relocate the legend
+plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
